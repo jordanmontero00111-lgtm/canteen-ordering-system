@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Portal — CafeteriaHub</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="brand">
+    <div class="brand-mark">🍽️</div>
+    <div>CafeteriaHub <span class="brand-sub">Student Portal</span></div>
+  </div>
+  <div class="nav-right">
+    <button class="cart-btn-nav" onclick="toggleCart()">
+      🛒 Cart <span class="cbadge" id="cart-count">0</span>
+    </button>
+    <div class="nav-user-chip">
+      <div class="avatar" id="av">?</div>
+      <span id="nav-name">Student</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-section-label">Ordering</div>
+    <div class="sidebar-item active" id="sb-menu" onclick="goTab('menu')"><span class="s-icon">🍽️</span> Browse Menu</div>
+    <div class="sidebar-item" id="sb-orders" onclick="goTab('orders')"><span class="s-icon">📋</span> My Orders</div>
+    <hr class="sidebar-divider"/>
+    <div class="sidebar-section-label">Account</div>
+    <div class="sidebar-item" id="sb-profile" onclick="goTab('profile')"><span class="s-icon">👤</span> My Profile</div>
+    <a class="sidebar-item" href="logout.html" style="color:var(--rose-500)"><span class="s-icon">🚪</span> Sign Out</a>
+  </aside>
+
+  <main class="main">
+
+    <!-- MENU TAB -->
+    <div id="tab-menu" class="page">
+      <div class="welcome-banner">
+        <div>
+          <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px">Good day 👋</div>
+          <div style="font-size:1.05rem;font-weight:800;letter-spacing:-0.3px" id="greet-name">Loading...</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:2px" id="greet-id"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <div style="background:rgba(20,184,166,0.2);border:1px solid rgba(20,184,166,0.35);border-radius:var(--r-sm);padding:5px 12px;font-size:0.74rem;font-weight:700;color:var(--teal-400)">💵 Cash on Delivery</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+        <div>
+          <div class="page-title">Today's Menu</div>
+          <div class="page-sub" id="menu-date-lbl"></div>
+        </div>
+        <div class="search-wrap">
+          <span class="si">🔍</span>
+          <input type="text" id="menu-q" placeholder="Search menu..." oninput="filterMenu()"/>
+        </div>
+      </div>
+
+      <div class="chips" id="cat-chips">
+        <div class="chip active" onclick="setCat(this,'All')">All</div>
+        <div class="chip" onclick="setCat(this,'Rice Meals')">🍚 Rice Meals</div>
+        <div class="chip" onclick="setCat(this,'Snacks')">🍟 Snacks</div>
+        <div class="chip" onclick="setCat(this,'Drinks')">🥤 Drinks</div>
+        <div class="chip" onclick="setCat(this,'Desserts')">🍮 Desserts</div>
+        <div class="chip" onclick="setCat(this,'Soups')">🍲 Soups</div>
+      </div>
+
+      <div class="menu-grid" id="menu-grid"></div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div id="tab-orders" class="page" style="display:none">
+      <div class="page-head">
+        <div><div class="page-title">My Orders</div><div class="page-sub">Your order history</div></div>
+      </div>
+
+      <!-- Status legend -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+        <span class="badge badge-amber">Pending</span>
+        <span class="badge badge-sky">Processing</span>
+        <span class="badge badge-emerald">Ready for Pickup</span>
+        <span class="badge badge-navy">Completed</span>
+        <span class="badge badge-rose">Cancelled</span>
+      </div>
+
+      <div id="orders-list"></div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div id="tab-profile" class="page-sm" style="display:none">
+      <div class="page-head">
+        <div><div class="page-title">My Profile</div><div class="page-sub">Manage your account information</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+            <div style="width:56px;height:56px;background:var(--teal-500);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800" id="pro-av">?</div>
+            <div>
+              <div style="font-weight:800;font-size:1rem;color:var(--navy-900)" id="pro-name">—</div>
+              <div style="font-size:0.78rem;color:var(--navy-500)" id="pro-email">—</div>
+              <div style="margin-top:5px;display:flex;gap:6px;align-items:center">
+                <span class="badge badge-navy" id="pro-id">—</span>
+                <span class="badge badge-teal" id="pro-year"></span>
+              </div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-control" id="e-name"/></div>
+          <div class="form-group"><label class="form-label">Email Address</label><input type="email" class="form-control" id="e-email"/></div>
+          <div class="form-group">
+            <label class="form-label">New Password <span style="font-weight:400;text-transform:none;font-size:0.72rem;color:var(--navy-400)">(leave blank to keep current)</span></label>
+            <input type="password" class="form-control" id="e-pass" placeholder="••••••••"/>
+          </div>
+          <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+        </div>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="card">
+        <div class="card-head"><div class="card-title">Order Summary</div></div>
+        <div class="card-body" id="profile-stats"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CART DRAWER -->
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-drawer-head">
+    <h3>🛒 Order Cart</h3>
+    <button class="modal-close" style="background:rgba(255,255,255,0.1);color:white" onclick="toggleCart()">×</button>
+  </div>
+  <div class="cart-items-area" id="cart-items-area">
+    <div class="empty"><div class="empty-icon">🛒</div><div class="empty-title">Cart is empty</div><div class="empty-sub">Add items from the menu</div></div>
+  </div>
+  <div class="cart-footer">
+    <div class="cod-tag">💵 <span>Payment: <strong>Cash on Delivery</strong> — pay at pickup</span></div>
+    <div class="cart-total-row"><span>Order Total</span><span id="cart-total">₱0.00</span></div>
+    <button class="btn btn-amber btn-full btn-lg" onclick="placeOrder()">Confirm Order</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="js/app.js"></script>
+<script>
+let cart = [];
+let activeCat = 'All';
+let cUser = null;
+
+const statusColor = {Pending:'badge-amber',Processing:'badge-sky',Ready:'badge-emerald',Completed:'badge-navy',Cancelled:'badge-rose'};
+
+document.addEventListener('DOMContentLoaded', () => {
+  cUser = JSON.parse(localStorage.getItem('ch_user'));
+  if (!cUser || cUser.role !== 'student') { location.href = 'login.html'; return; }
+  document.getElementById('av').textContent = cUser.name[0].toUpperCase();
+  document.getElementById('nav-name').textContent = cUser.name.split(' ')[0];
+  document.getElementById('greet-name').textContent = cUser.name;
+  document.getElementById('greet-id').textContent = cUser.studentId ? 'ID: ' + cUser.studentId : '';
+  document.getElementById('menu-date-lbl').textContent = new Date().toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  renderMenu();
+});
+
+function getMenu() { return JSON.parse(localStorage.getItem('ch_menu') || '[]'); }
+
+function renderMenu() {
+  const q = (document.getElementById('menu-q')?.value || '').toLowerCase();
+  let items = getMenu();
+  if (activeCat !== 'All') items = items.filter(i => i.cat === activeCat);
+  if (q) items = items.filter(i => i.name.toLowerCase().includes(q) || i.cat.toLowerCase().includes(q));
+  const grid = document.getElementById('menu-grid');
+  if (!items.length) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🍽️</div><div class="empty-title">No items found</div><div class="empty-sub">Try a different category or search term</div></div>'; return;
+  }
+  grid.innerHTML = items.map(item => `
+    <div class="menu-card">
+      <div class="menu-card-img">
+        ${item.img
+          ? `<img src="${item.img}" alt="${item.name}"/>`
+          : `<div class="menu-card-img-placeholder"><div class="ph-icon">🍽️</div><span>No photo</span></div>`}
+        ${!item.available ? '<div class="menu-card-unavail-overlay">Unavailable</div>' : ''}
+      </div>
+      <div class="menu-card-body">
+        <div class="menu-card-name">${item.name}</div>
+        <div class="menu-card-cat">${item.cat}</div>
+        ${item.desc ? `<div style="font-size:0.72rem;color:var(--navy-400);margin-bottom:8px;line-height:1.4">${item.desc}</div>` : ''}
+        <div class="menu-card-footer">
+          <div class="menu-price">₱${item.price}</div>
+          <button class="add-btn" onclick="addToCart(${item.id})" ${!item.available?'disabled':''} title="Add to cart">+</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterMenu() { renderMenu(); }
+function setCat(el, cat) {
+  activeCat = cat;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderMenu();
+}
+
+function addToCart(id) {
+  const item = getMenu().find(m => m.id === id);
+  if (!item) return;
+  const ex = cart.find(c => c.id === id);
+  if (ex) ex.qty++; else cart.push({...item, qty: 1});
+  updateCartUI();
+  showToast(item.name + ' added to cart', 'ok');
+}
+
+function updateCartUI() {
+  const count = cart.reduce((s,i) => s+i.qty, 0);
+  const total = cart.reduce((s,i) => s+i.price*i.qty, 0);
+  document.getElementById('cart-count').textContent = count;
+  document.getElementById('cart-total').textContent = '₱' + total.toFixed(2);
+  const area = document.getElementById('cart-items-area');
+  if (!cart.length) {
+    area.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><div class="empty-title">Cart is empty</div><div class="empty-sub">Add items from the menu to get started</div></div>'; return;
+  }
+  area.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-thumb">
+        ${item.img ? `<img src="${item.img}" alt="${item.name}"/>` : `<div class="cart-item-thumb-ph">🍽️</div>`}
+      </div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-price">₱${item.price} × ${item.qty} = ₱${(item.price*item.qty).toFixed(2)}</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+        <div class="qty-num">${item.qty}</div>
+        <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+      </div>
+    </div>`).join('');
+}
+
+function changeQty(id, d) {
+  const item = cart.find(c => c.id === id);
+  if (!item) return;
+  item.qty += d;
+  if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+  updateCartUI();
+}
+
+function toggleCart() { document.getElementById('cart-drawer').classList.toggle('open'); }
+
+function placeOrder() {
+  if (!cart.length) { showToast('Your cart is empty!', 'err'); return; }
+  const orders = JSON.parse(localStorage.getItem('ch_orders') || '[]');
+  const order = {
+    id: 'ORD-' + Date.now(),
+    studentId: cUser.id,
+    studentName: cUser.name,
+    studentCode: cUser.studentId,
+    items: cart.map(i => ({id:i.id,name:i.name,price:i.price,qty:i.qty,img:i.img||null})),
+    total: cart.reduce((s,i) => s+i.price*i.qty, 0),
+    status: 'Pending',
+    payment: 'Cash on Delivery',
+    createdAt: new Date().toISOString()
+  };
+  orders.push(order);
+  localStorage.setItem('ch_orders', JSON.stringify(orders));
+  cart = [];
+  updateCartUI();
+  toggleCart();
+  showToast('Order placed! Pay cash at pickup. 💵', 'ok');
+}
+
+function goTab(t) {
+  ['menu','orders','profile'].forEach(x => {
+    document.getElementById('tab-'+x).style.display = x===t ? '' : 'none';
+    document.getElementById('sb-'+x)?.classList.toggle('active', x===t);
+  });
+  if (t === 'orders') renderOrders();
+  if (t === 'profile') loadProfile();
+}
+
+function renderOrders() {
+  const orders = JSON.parse(localStorage.getItem('ch_orders') || '[]').filter(o => o.studentId === cUser.id).reverse();
+  const list = document.getElementById('orders-list');
+  if (!orders.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No orders yet</div><div class="empty-sub">Place your first order from the menu</div></div>'; return;
+  }
+  list.innerHTML = orders.map(o => `
+    <div class="order-card">
+      <div class="order-card-head">
+        <div>
+          <div class="order-id">${o.id}</div>
+          <div class="order-time">${new Date(o.createdAt).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'})}</div>
+        </div>
+        <span class="badge ${statusColor[o.status]||'badge-navy'}">${o.status === 'Ready' ? '✅ Ready for Pickup' : o.status}</span>
+      </div>
+      <div class="order-card-body">
+        ${o.items.map(i=>`<div class="order-item-row"><span>${i.name} × ${i.qty}</span><span style="font-weight:600">₱${(i.price*i.qty).toFixed(2)}</span></div>`).join('')}
+      </div>
+      <div class="order-card-foot">
+        <div class="order-total">₱${o.total.toFixed(2)}</div>
+        <span class="cod-pill">💵 Cash on Delivery</span>
+      </div>
+    </div>`).join('');
+}
+
+function loadProfile() {
+  const users = JSON.parse(localStorage.getItem('ch_users') || '[]');
+  cUser = users.find(u => u.id === cUser.id) || cUser;
+  document.getElementById('pro-av').textContent = cUser.name[0].toUpperCase();
+  document.getElementById('pro-name').textContent = cUser.name;
+  document.getElementById('pro-email').textContent = cUser.email;
+  document.getElementById('pro-id').textContent = cUser.studentId || 'No Student ID';
+  const yearEl = document.getElementById('pro-year');
+  if (cUser.yearLevel) { yearEl.textContent = cUser.yearLevel; yearEl.style.display=''; } else { yearEl.style.display='none'; }
+  document.getElementById('e-name').value = cUser.name;
+  document.getElementById('e-email').value = cUser.email;
+
+  // Profile order stats
+  const orders = JSON.parse(localStorage.getItem('ch_orders') || '[]').filter(o => o.studentId === cUser.id);
+  const completed = orders.filter(o => o.status === 'Completed');
+  const spent = completed.reduce((s,o) => s+o.total, 0);
+  document.getElementById('profile-stats').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div style="text-align:center;padding:14px;background:var(--navy-50);border-radius:var(--r-md)">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--navy-900)">${orders.length}</div>
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--navy-400);margin-top:3px">Total Orders</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:var(--emerald-50);border-radius:var(--r-md)">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--emerald-600)">${completed.length}</div>
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--emerald-600);margin-top:3px">Completed</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:var(--teal-50);border-radius:var(--r-md)">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--teal-600)">₱${spent.toFixed(0)}</div>
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--teal-600);margin-top:3px">Total Spent</div>
+      </div>
+    </div>
+  `;
+}
+
+function saveProfile() {
+  const name = document.getElementById('e-name').value.trim();
+  const email = document.getElementById('e-email').value.trim();
+  const pass = document.getElementById('e-pass').value;
+  if (!name || !email) { showToast('Name and email are required', 'err'); return; }
+  const users = JSON.parse(localStorage.getItem('ch_users') || '[]');
+  const idx = users.findIndex(u => u.id === cUser.id);
+  if (idx < 0) { showToast('Account not found', 'err'); return; }
+  users[idx].name = name; users[idx].email = email;
+  if (pass) users[idx].password = pass;
+  localStorage.setItem('ch_users', JSON.stringify(users));
+  cUser = users[idx]; localStorage.setItem('ch_user', JSON.stringify(cUser));
+  document.getElementById('av').textContent = cUser.name[0].toUpperCase();
+  document.getElementById('nav-name').textContent = cUser.name.split(' ')[0];
+  document.getElementById('greet-name').textContent = cUser.name;
+  loadProfile();
+  showToast('Profile updated successfully!', 'ok');
+}
+</script>
+</body>
+</html>

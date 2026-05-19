@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Account — CafeteriaHub</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-form-side" style="overflow-y:auto">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🍽️</div>
+      <div>
+        <div class="auth-logo-name">CafeteriaHub</div>
+        <div class="auth-logo-sub">Campus Canteen System</div>
+      </div>
+    </div>
+
+    <div class="auth-title">Create an account</div>
+    <div class="auth-sub">Join and start ordering from your canteen today.</div>
+
+    <div style="margin-bottom:20px">
+      <div class="form-label">Account Type</div>
+      <div class="role-pick">
+        <div class="role-opt on" id="r-student" onclick="pickRole('student')">
+          <div class="role-opt-icon">👤</div>
+          <div class="role-opt-name">Student</div>
+        </div>
+        <div class="role-opt" id="r-admin" onclick="pickRole('admin')">
+          <div class="role-opt-icon">🛠️</div>
+          <div class="role-opt-name">Admin / Staff</div>
+        </div>
+      </div>
+      <input type="hidden" id="role-val" value="student"/>
+    </div>
+
+    <div id="alert-box"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" id="rn" class="form-control" placeholder="Juan Dela Cruz" autocomplete="name"/>
+      </div>
+      <div class="form-group" id="sid-grp">
+        <label class="form-label">Student ID</label>
+        <input type="text" id="rs" class="form-control" placeholder="STU-2024-001"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input type="email" id="re" class="form-control" placeholder="you@school.edu" autocomplete="email"/>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="rp" class="form-control" placeholder="Min. 6 characters" autocomplete="new-password"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" id="rc" class="form-control" placeholder="Repeat password" autocomplete="new-password"/>
+      </div>
+    </div>
+
+    <div class="form-group" id="yr-grp">
+      <label class="form-label">Year / Grade Level</label>
+      <select id="ry" class="form-control">
+        <option value="">Select level</option>
+        <option>Grade 7</option><option>Grade 8</option><option>Grade 9</option><option>Grade 10</option>
+        <option>Grade 11</option><option>Grade 12</option>
+        <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary btn-full btn-lg" onclick="doRegister()">Create Account</button>
+    <div class="auth-footer">Already have an account? <a href="login.html">Sign in</a></div>
+  </div>
+
+  <div class="auth-art-side">
+    <div class="auth-art-bg"></div>
+    <div class="auth-art-grid"></div>
+    <div class="auth-art-dots"></div>
+    <div class="auth-art-content">
+      <div class="auth-art-tag">🍱 Smart Canteen</div>
+      <div class="auth-art-title">Your campus meal,<br/><em style="color:var(--teal-400);font-style:normal">simplified.</em></div>
+      <div class="auth-art-sub">Register once, order anytime. Browse the menu with real photos and pay at the counter.</div>
+      <div style="margin-top:36px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r-xl);padding:20px;max-width:280px">
+        <div style="font-size:0.64rem;color:rgba(255,255,255,0.3);font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px">Sample Order</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:0.83rem;color:rgba(255,255,255,0.7)"><span>Chicken Adobo Rice</span><span style="font-weight:700">₱65</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.83rem;color:rgba(255,255,255,0.7)"><span>Buko Juice</span><span style="font-weight:700">₱25</span></div>
+          <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;display:flex;justify-content:space-between;font-size:0.9rem;color:white;font-weight:800"><span>Total</span><span>₱90</span></div>
+        </div>
+        <div style="margin-top:12px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:var(--r-sm);padding:8px 12px;text-align:center;color:#fcd34d;font-size:0.74rem;font-weight:700">💵 Cash on Delivery</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="js/app.js"></script>
+<script>
+  function pickRole(r) {
+    document.getElementById('role-val').value = r;
+    document.getElementById('r-student').classList.toggle('on', r === 'student');
+    document.getElementById('r-admin').classList.toggle('on', r === 'admin');
+    document.getElementById('sid-grp').style.display = r === 'student' ? '' : 'none';
+    document.getElementById('yr-grp').style.display  = r === 'student' ? '' : 'none';
+  }
+
+  function doRegister() {
+    const name = document.getElementById('rn').value.trim();
+    const email= document.getElementById('re').value.trim();
+    const pass = document.getElementById('rp').value;
+    const conf = document.getElementById('rc').value;
+    const role = document.getElementById('role-val').value;
+    const sid  = document.getElementById('rs').value.trim();
+    const box  = document.getElementById('alert-box');
+
+    if (!name || !email || !pass || !conf) { box.innerHTML='<div class="alert alert-err">⚠️ Please fill in all required fields.</div>'; return; }
+    if (pass.length < 6) { box.innerHTML='<div class="alert alert-err">⚠️ Password must be at least 6 characters.</div>'; return; }
+    if (pass !== conf) { box.innerHTML='<div class="alert alert-err">⚠️ Passwords do not match.</div>'; return; }
+
+    const users = JSON.parse(localStorage.getItem('ch_users') || '[]');
+    if (users.find(u => u.email === email)) { box.innerHTML='<div class="alert alert-err">❌ This email is already registered.</div>'; return; }
+
+    const user = {
+      id: Date.now(), name, email, password: pass, role,
+      studentId: sid || null,
+      yearLevel: role === 'student' ? document.getElementById('ry').value : null,
+      createdAt: new Date().toISOString()
+    };
+    users.push(user);
+    localStorage.setItem('ch_users', JSON.stringify(users));
+    localStorage.setItem('ch_user', JSON.stringify(user));
+    showToast('Account created successfully!', 'ok');
+    setTimeout(() => { location.href = role === 'admin' ? 'admin-dashboard.html' : 'student-dashboard.html'; }, 700);
+  }
+</script>
+</body>
+</html>

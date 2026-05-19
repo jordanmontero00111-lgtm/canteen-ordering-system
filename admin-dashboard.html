@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard — CafeteriaHub</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="brand">
+    <div class="brand-mark">🍽️</div>
+    <div>CafeteriaHub <span class="brand-sub">Admin Dashboard</span></div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-user-chip">
+      <div class="avatar" id="admin-av">A</div>
+      <span id="admin-hi">Administrator</span>
+    </div>
+    <a href="logout.html" class="btn btn-outline-white btn-sm">Sign Out</a>
+  </div>
+</nav>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-section-label">Dashboard</div>
+    <div class="sidebar-item active" id="sb-overview" onclick="goAdmin('overview')"><span class="s-icon">📊</span> Overview</div>
+    <div class="sidebar-item" id="sb-orders" onclick="goAdmin('orders')"><span class="s-icon">📋</span> Orders <span class="sidebar-badge" id="pending-ct" style="display:none"></span></div>
+    <div class="sidebar-item" id="sb-menu" onclick="goAdmin('menu')"><span class="s-icon">🍽️</span> Menu Manager</div>
+    <div class="sidebar-item" id="sb-users" onclick="goAdmin('users')"><span class="s-icon">👥</span> Users</div>
+    <div class="sidebar-item" id="sb-analytics" onclick="goAdmin('analytics')"><span class="s-icon">📈</span> Analytics</div>
+    <hr class="sidebar-divider"/>
+    <div class="sidebar-section-label">System</div>
+    <a class="sidebar-item" href="logout.html" style="color:var(--rose-500)"><span class="s-icon">🚪</span> Sign Out</a>
+  </aside>
+
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <div id="tab-overview" class="page">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Overview</div>
+          <div class="page-sub" id="ov-date"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="goAdmin('orders')">Manage Orders →</button>
+      </div>
+      <div class="stat-grid" id="stat-grid"></div>
+      <div style="display:grid;grid-template-columns:3fr 2fr;gap:18px">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="goAdmin('orders')">View all →</button></div>
+          <div id="recent-orders"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Order Pipeline</div></div>
+          <div class="card-body" id="status-breakdown"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="tab-orders" class="page" style="display:none">
+      <div class="page-head">
+        <div><div class="page-title">All Orders</div><div class="page-sub">Update order status and manage pickups</div></div>
+        <select class="form-control" id="status-filter" onchange="renderOrders()" style="width:auto">
+          <option value="">All Statuses</option>
+          <option>Pending</option><option>Processing</option><option>Ready</option><option>Completed</option><option>Cancelled</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Order ID</th><th>Student</th><th>Items</th><th>Total</th><th>Payment</th><th>Time</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <div id="tab-menu" class="page" style="display:none">
+      <div class="page-head">
+        <div><div class="page-title">Menu Manager</div><div class="page-sub">Add and manage menu items with photos</div></div>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add Item</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Photo</th><th>Name</th><th>Category</th><th>Price</th><th>Description</th><th>Availability</th><th>Actions</th></tr></thead>
+            <tbody id="menu-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div id="tab-users" class="page" style="display:none">
+      <div class="page-head">
+        <div><div class="page-title">User Management</div><div class="page-sub">All registered accounts</div></div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Student ID</th><th>Year Level</th><th>Joined</th></tr></thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div id="tab-analytics" class="page" style="display:none">
+      <div class="page-head">
+        <div><div class="page-title">Analytics</div><div class="page-sub">Sales and order performance insights</div></div>
+      </div>
+      <div class="stat-grid" id="analytics-stats" style="margin-bottom:20px"></div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Top Selling Items</div></div>
+        <div class="card-body" id="top-items"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD / EDIT MENU MODAL -->
+<div class="overlay" id="menu-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title-txt">Add Menu Item</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Food Photo</label>
+      <!-- FIX: hidden file input, click triggered by the box onclick -->
+      <input type="file" accept="image/jpeg,image/png,image/webp" id="img-file"
+             style="display:none" onchange="handleImgUpload(event)"/>
+      <div class="img-upload-box" id="img-box" onclick="document.getElementById('img-file').click()" style="cursor:pointer">
+        <div class="img-upload-placeholder" id="img-placeholder">
+          <div class="upload-icon">📸</div>
+          <strong style="font-size:0.84rem;color:var(--navy-600)">Click to upload photo</strong>
+          <div>JPG, PNG, WEBP · Max 5MB</div>
+        </div>
+        <img id="img-preview" style="display:none;width:100%;height:160px;object-fit:cover;border-radius:calc(var(--r-md) - 2px)"/>
+        <div class="img-upload-overlay">📷 Change photo</div>
+      </div>
+      <div class="form-hint">Upload a clear photo of the food item for students to see.</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Item Name</label>
+        <input type="text" class="form-control" id="mi-name" placeholder="e.g. Chicken Adobo Rice"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-control" id="mi-cat">
+          <option>Rice Meals</option><option>Snacks</option><option>Drinks</option><option>Desserts</option><option>Soups</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price (₱)</label>
+        <input type="number" class="form-control" id="mi-price" placeholder="0" min="1"/>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Description <span style="text-transform:none;font-weight:400;font-size:0.72rem;color:var(--navy-400)">(optional)</span></label>
+        <input type="text" class="form-control" id="mi-desc" placeholder="e.g. Served with steamed rice and pickled papaya"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.84rem;color:var(--navy-700);font-weight:600">
+        <input type="checkbox" id="mi-avail" checked/> Available for ordering today
+      </label>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="saveItem()">Save Menu Item</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="js/app.js"></script>
+<script>
+let adminUser = null;
+let editingId = null;
+let uploadedImg = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  adminUser = JSON.parse(localStorage.getItem('ch_user'));
+  if (!adminUser || adminUser.role !== 'admin') { location.href = 'login.html'; return; }
+  document.getElementById('admin-hi').textContent = adminUser.name;
+  document.getElementById('admin-av').textContent = adminUser.name[0].toUpperCase();
+  document.getElementById('ov-date').textContent = new Date().toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  loadOverview();
+});
+
+function getOrders() { return JSON.parse(localStorage.getItem('ch_orders') || '[]'); }
+function getMenu()   { return JSON.parse(localStorage.getItem('ch_menu') || '[]'); }
+function getUsers()  { return JSON.parse(localStorage.getItem('ch_users') || '[]'); }
+function saveMenu(m) { localStorage.setItem('ch_menu', JSON.stringify(m)); }
+
+const statusColor = {Pending:'badge-amber',Processing:'badge-sky',Ready:'badge-emerald',Completed:'badge-navy',Cancelled:'badge-rose'};
+
+function loadOverview() {
+  const orders = getOrders();
+  const pending = orders.filter(o => o.status === 'Pending').length;
+  const completed = orders.filter(o => o.status === 'Completed');
+  const revenue = completed.reduce((s,o) => s+o.total, 0);
+
+  const pb = document.getElementById('pending-ct');
+  if (pending > 0) { pb.textContent = pending; pb.style.display=''; } else { pb.style.display='none'; }
+
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat teal"><div class="stat-icon-wrap teal">📋</div><div class="stat-lbl">Total Orders</div><div class="stat-val">${orders.length}</div><div class="stat-note">All time</div></div>
+    <div class="stat amber"><div class="stat-icon-wrap amber">⏳</div><div class="stat-lbl">Pending</div><div class="stat-val" style="color:var(--amber-600)">${pending}</div><div class="stat-note">Awaiting action</div></div>
+    <div class="stat emerald"><div class="stat-icon-wrap emerald">💵</div><div class="stat-lbl">COD Revenue</div><div class="stat-val">₱${revenue.toFixed(0)}</div><div class="stat-note">From completed orders</div></div>
+    <div class="stat sky"><div class="stat-icon-wrap sky">👥</div><div class="stat-lbl">Users</div><div class="stat-val">${getUsers().length}</div><div class="stat-note">Registered accounts</div></div>
+  `;
+
+  const last5 = [...orders].reverse().slice(0,5);
+  document.getElementById('recent-orders').innerHTML = last5.length
+    ? last5.map(o => `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--navy-50)">
+        <div><div style="font-size:0.82rem;font-weight:700;color:var(--navy-900);font-variant-numeric:tabular-nums">${o.id}</div><div style="font-size:0.7rem;color:var(--navy-400)">${o.studentName}</div></div>
+        <div style="text-align:right"><div style="font-weight:800;font-size:0.84rem">₱${o.total.toFixed(2)}</div><span class="badge ${statusColor[o.status]||'badge-navy'}" style="margin-top:4px">${o.status}</span></div>
+      </div>`).join('')
+    : '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No orders yet</div></div>';
+
+  const statuses = ['Pending','Processing','Ready','Completed','Cancelled'];
+  document.getElementById('status-breakdown').innerHTML = statuses.map(s => {
+    const cnt = orders.filter(o => o.status === s).length;
+    const pct = orders.length ? Math.round(cnt/orders.length*100) : 0;
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:5px">
+        <span class="badge ${statusColor[s]||'badge-navy'}">${s}</span>
+        <span style="font-weight:700;color:var(--navy-600);font-size:0.8rem">${cnt}</span>
+      </div>
+      <div style="background:var(--navy-100);border-radius:var(--r-full);height:5px">
+        <div style="width:${pct}%;background:var(--teal-500);height:5px;border-radius:var(--r-full);transition:width 0.5s"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderOrders() {
+  const filter = document.getElementById('status-filter').value;
+  let orders = getOrders().reverse();
+  if (filter) orders = orders.filter(o => o.status === filter);
+  const nxt = {Pending:'Processing',Processing:'Ready',Ready:'Completed'};
+  const tbody = document.getElementById('orders-tbody');
+  if (!orders.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:44px;color:var(--navy-400)">No orders found</td></tr>'; return; }
+  tbody.innerHTML = orders.map(o => `
+    <tr>
+      <td style="font-weight:800;font-size:0.78rem;color:var(--navy-900);font-variant-numeric:tabular-nums">${o.id}</td>
+      <td>
+        <div style="font-weight:600;color:var(--navy-800)">${o.studentName}</div>
+        <div style="font-size:0.7rem;color:var(--navy-400)">${o.studentCode||''}</div>
+      </td>
+      <td style="font-size:0.78rem;max-width:200px;color:var(--navy-500)">${o.items.map(i=>i.name+' ×'+i.qty).join(', ')}</td>
+      <td style="font-weight:800;color:var(--navy-900)">₱${o.total.toFixed(2)}</td>
+      <td><span class="badge badge-amber">💵 COD</span></td>
+      <td style="font-size:0.74rem;color:var(--navy-400)">${new Date(o.createdAt).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td><span class="badge ${statusColor[o.status]||'badge-navy'}">${o.status}</span></td>
+      <td style="display:flex;gap:5px;flex-wrap:nowrap">
+        ${nxt[o.status]?`<button class="btn btn-sm btn-primary" onclick="updOrder('${o.id}','${nxt[o.status]}')">→ ${nxt[o.status]}</button>`:''}
+        ${o.status==='Pending'?`<button class="btn btn-sm btn-danger" onclick="updOrder('${o.id}','Cancelled')">✕</button>`:''}
+      </td>
+    </tr>`).join('');
+}
+
+function updOrder(id, status) {
+  const orders = getOrders();
+  const idx = orders.findIndex(o => o.id === id);
+  if (idx > -1) { orders[idx].status = status; localStorage.setItem('ch_orders', JSON.stringify(orders)); renderOrders(); loadOverview(); showToast('Order updated to ' + status, 'ok'); }
+}
+
+function renderMenuTable() {
+  const menu = getMenu();
+  const tbody = document.getElementById('menu-tbody');
+  if (!menu.length) { tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:44px;color:var(--navy-400)">No menu items yet. Click "+ Add Item" to get started.</td></tr>'; return; }
+  tbody.innerHTML = menu.map(item => `
+    <tr>
+      <td>
+        <div style="width:54px;height:46px;background:var(--navy-100);border-radius:var(--r-sm);overflow:hidden">
+          ${item.img ? `<img src="${item.img}" style="width:100%;height:100%;object-fit:cover"/>` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px">🍽️</div>`}
+        </div>
+      </td>
+      <td style="font-weight:700;color:var(--navy-900)">${item.name}</td>
+      <td><span class="badge badge-navy">${item.cat}</span></td>
+      <td style="font-weight:800;color:var(--navy-900)">₱${item.price}</td>
+      <td style="font-size:0.76rem;color:var(--navy-500);max-width:180px">${item.desc || '—'}</td>
+      <td>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:0.8rem;font-weight:600;width:max-content">
+          <input type="checkbox" ${item.available?'checked':''} onchange="toggleAvail(${item.id})"/>
+          ${item.available?'<span class="badge badge-emerald">Available</span>':'<span class="badge badge-rose">Unavailable</span>'}
+        </label>
+      </td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-outline" onclick="openEditModal(${item.id})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteItem(${item.id})">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function toggleAvail(id) {
+  const menu = getMenu();
+  const item = menu.find(i => i.id === id);
+  if (item) { item.available = !item.available; saveMenu(menu); renderMenuTable(); showToast(item.name + ' ' + (item.available?'is now available':'marked unavailable')); }
+}
+
+function openAddModal() {
+  editingId = null;
+  uploadedImg = null;
+  document.getElementById('modal-title-txt').textContent = 'Add Menu Item';
+  document.getElementById('mi-name').value = '';
+  document.getElementById('mi-price').value = '';
+  document.getElementById('mi-desc').value = '';
+  document.getElementById('mi-cat').value = 'Rice Meals';
+  document.getElementById('mi-avail').checked = true;
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('img-placeholder').style.display = '';
+  document.getElementById('img-box').classList.remove('has-img');
+  // FIX: reset the file input so the same file can be re-selected
+  document.getElementById('img-file').value = '';
+  document.getElementById('menu-modal').classList.add('show');
+}
+
+function openEditModal(id) {
+  const item = getMenu().find(i => i.id === id);
+  if (!item) return;
+  editingId = id;
+  uploadedImg = item.img || null;
+  document.getElementById('modal-title-txt').textContent = 'Edit Menu Item';
+  document.getElementById('mi-name').value = item.name;
+  document.getElementById('mi-price').value = item.price;
+  document.getElementById('mi-desc').value = item.desc || '';
+  document.getElementById('mi-cat').value = item.cat;
+  document.getElementById('mi-avail').checked = item.available;
+  // FIX: reset file input on edit open too
+  document.getElementById('img-file').value = '';
+  if (item.img) {
+    document.getElementById('img-preview').src = item.img;
+    document.getElementById('img-preview').style.display = '';
+    document.getElementById('img-placeholder').style.display = 'none';
+    document.getElementById('img-box').classList.add('has-img');
+  } else {
+    document.getElementById('img-preview').style.display = 'none';
+    document.getElementById('img-placeholder').style.display = '';
+    document.getElementById('img-box').classList.remove('has-img');
+  }
+  document.getElementById('menu-modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('menu-modal').classList.remove('show');
+}
+
+// FIX: moved file input OUTSIDE the upload box and wired click via onclick on the box
+function handleImgUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  // FIX: validate file type explicitly
+  const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!allowed.includes(file.type)) {
+    showToast('Only JPG, PNG, or WEBP images are allowed', 'err');
+    e.target.value = '';
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Image must be under 5MB', 'err');
+    e.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    uploadedImg = ev.target.result;
+    document.getElementById('img-preview').src = uploadedImg;
+    document.getElementById('img-preview').style.display = '';
+    document.getElementById('img-placeholder').style.display = 'none';
+    document.getElementById('img-box').classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveItem() {
+  const name  = document.getElementById('mi-name').value.trim();
+  const price = parseFloat(document.getElementById('mi-price').value);
+  const cat   = document.getElementById('mi-cat').value;
+  const desc  = document.getElementById('mi-desc').value.trim();
+  const avail = document.getElementById('mi-avail').checked;
+  if (!name) { showToast('Item name is required', 'err'); return; }
+  if (!price || price <= 0) { showToast('Enter a valid price', 'err'); return; }
+
+  const menu = getMenu();
+  if (editingId) {
+    const idx = menu.findIndex(i => i.id === editingId);
+    menu[idx] = {...menu[idx], name, price, cat, desc, available: avail, img: uploadedImg || menu[idx].img || null};
+    showToast('Menu item updated!', 'ok');
+  } else {
+    menu.push({id: Date.now(), name, price, cat, desc, available: avail, img: uploadedImg || null});
+    showToast('Menu item added!', 'ok');
+  }
+  saveMenu(menu);
+  renderMenuTable();
+  closeModal();
+}
+
+function deleteItem(id) {
+  if (!confirm('Are you sure you want to delete this menu item?')) return;
+  const menu = getMenu().filter(i => i.id !== id);
+  saveMenu(menu);
+  renderMenuTable();
+  showToast('Item deleted');
+}
+
+function renderUsers() {
+  const users = getUsers();
+  const tbody = document.getElementById('users-tbody');
+  if (!users.length) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:44px;color:var(--navy-400)">No users registered yet</td></tr>'; return; }
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:30px;height:30px;background:var(--teal-100);color:var(--teal-600);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${u.name[0].toUpperCase()}</div>
+          <span style="font-weight:600;color:var(--navy-800)">${u.name}</span>
+        </div>
+      </td>
+      <td style="font-size:0.82rem;color:var(--navy-500)">${u.email}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-sky':'badge-navy'}">${u.role}</span></td>
+      <td style="font-size:0.8rem;font-variant-numeric:tabular-nums">${u.studentId||'—'}</td>
+      <td style="font-size:0.8rem">${u.yearLevel||'—'}</td>
+      <td style="font-size:0.74rem;color:var(--navy-400)">${u.createdAt?new Date(u.createdAt).toLocaleDateString('en-PH'):'—'}</td>
+    </tr>`).join('');
+}
+
+function renderAnalytics() {
+  const orders = getOrders();
+  const done = orders.filter(o => o.status === 'Completed');
+  const rev = done.reduce((s,o) => s+o.total, 0);
+  const avg = done.length ? rev/done.length : 0;
+  document.getElementById('analytics-stats').innerHTML = `
+    <div class="stat emerald"><div class="stat-icon-wrap emerald">✅</div><div class="stat-lbl">Completed Orders</div><div class="stat-val">${done.length}</div></div>
+    <div class="stat teal"><div class="stat-icon-wrap teal">💵</div><div class="stat-lbl">Total Revenue</div><div class="stat-val">₱${rev.toFixed(0)}</div></div>
+    <div class="stat sky"><div class="stat-icon-wrap sky">📊</div><div class="stat-lbl">Avg Order Value</div><div class="stat-val">₱${avg.toFixed(0)}</div></div>
+  `;
+  const counts = {};
+  orders.forEach(o => o.items.forEach(i => {
+    if (!counts[i.name]) counts[i.name] = {name:i.name, qty:0, rev:0};
+    counts[i.name].qty += i.qty;
+    counts[i.name].rev += i.price * i.qty;
+  }));
+  const sorted = Object.values(counts).sort((a,b) => b.qty-a.qty).slice(0,8);
+  const max = sorted[0]?.qty || 1;
+  document.getElementById('top-items').innerHTML = !sorted.length
+    ? '<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No order data yet</div></div>'
+    : sorted.map((item, i) => `
+      <div style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:5px;align-items:center">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:20px;height:20px;background:var(--navy-900);color:white;border-radius:var(--r-xs);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800">${i+1}</div>
+            <span style="font-weight:700;color:var(--navy-800)">${item.name}</span>
+          </div>
+          <span style="color:var(--navy-400);font-size:0.76rem">${item.qty} sold · ₱${item.rev.toFixed(0)}</span>
+        </div>
+        <div style="background:var(--navy-100);border-radius:var(--r-full);height:7px">
+          <div style="width:${Math.round(item.qty/max*100)}%;background:var(--teal-500);height:7px;border-radius:var(--r-full);transition:width 0.6s"></div>
+        </div>
+      </div>`).join('');
+}
+
+function goAdmin(t) {
+  ['overview','orders','menu','users','analytics'].forEach(x => {
+    document.getElementById('tab-'+x).style.display = x===t ? '' : 'none';
+    document.getElementById('sb-'+x)?.classList.toggle('active', x===t);
+  });
+  if (t==='overview') loadOverview();
+  if (t==='orders') renderOrders();
+  if (t==='menu') renderMenuTable();
+  if (t==='users') renderUsers();
+  if (t==='analytics') renderAnalytics();
+}
+</script>
+</body>
+</html>   

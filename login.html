@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In — CafeteriaHub</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div class="auth-wrap">
+
+  <!-- FORM SIDE -->
+  <div class="auth-form-side">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🍽️</div>
+      <div class="auth-logo-name">CafeteriaHub</div>
+    </div>
+
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-sub">Sign in to your account to continue ordering.</div>
+
+    <div id="alert-box"></div>
+
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" id="em" class="form-control" placeholder="you@school.edu"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" id="pw" class="form-control" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+
+    <button class="btn btn-dark btn-full btn-lg" style="margin-bottom:14px" onclick="doLogin()">Sign In</button>
+
+    <div class="auth-divider">or try a demo</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="btn btn-outline" onclick="demo('student')">👤 Student Demo</button>
+      <button class="btn btn-outline" onclick="demo('admin')">🛠️ Admin Demo</button>
+    </div>
+
+    <div class="auth-footer">Don't have an account? <a href="register.html">Create one</a></div>
+  </div>
+
+  <!-- ART SIDE -->
+  <div class="auth-art-side">
+    <div class="auth-art-bg"></div>
+    <div class="auth-art-grid"></div>
+    <div class="auth-art-content">
+      <div class="auth-art-tag">🥡 Cash on Delivery</div>
+      <div class="auth-art-title">Order food, pay at pickup.</div>
+      <div class="auth-art-sub">No digital wallet needed. Browse the daily menu, place your order, and pay cash when you collect your food from the counter.</div>
+      <div style="margin-top:32px;display:flex;flex-direction:column;gap:12px">
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">✅</span>
+          <span style="color:rgba(255,255,255,0.7);font-size:0.84rem;font-weight:500">Browse real photos of menu items</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">✅</span>
+          <span style="color:rgba(255,255,255,0.7);font-size:0.84rem;font-weight:500">Place your order in under 30 seconds</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">✅</span>
+          <span style="color:rgba(255,255,255,0.7);font-size:0.84rem;font-weight:500">Pay cash when you pick it up</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="js/app.js"></script>
+<script>
+  function doLogin() {
+    const email = document.getElementById('em').value.trim();
+    const pass  = document.getElementById('pw').value;
+    const box   = document.getElementById('alert-box');
+    if (!email || !pass) { box.innerHTML = '<div class="alert alert-err">⚠️ Fill in all fields.</div>'; return; }
+    const users = JSON.parse(localStorage.getItem('ch_users') || '[]');
+    const user  = users.find(u => u.email === email && u.password === pass);
+    if (!user) { box.innerHTML = '<div class="alert alert-err">❌ Incorrect email or password.</div>'; return; }
+    localStorage.setItem('ch_user', JSON.stringify(user));
+    showToast('Welcome back, ' + user.name + '!', 'ok');
+    setTimeout(() => { location.href = user.role === 'admin' ? 'admin-dashboard.html' : 'student-dashboard.html'; }, 600);
+  }
+
+  function demo(role) {
+    const users = JSON.parse(localStorage.getItem('ch_users') || '[]');
+    let u = users.find(x => x.role === role && x.isDemo);
+    if (!u) {
+      u = {
+        id: role === 'admin' ? 9001 : 9002,
+        name: role === 'admin' ? 'Demo Admin' : 'Demo Student',
+        email: role + '@demo.com',
+        password: 'demo',
+        role,
+        studentId: role === 'student' ? 'STU-DEMO' : null,
+        isDemo: true,
+        createdAt: new Date().toISOString()
+      };
+      users.push(u);
+      localStorage.setItem('ch_users', JSON.stringify(users));
+    }
+    localStorage.setItem('ch_user', JSON.stringify(u));
+    showToast('Logged in as ' + u.name, 'ok');
+    setTimeout(() => { location.href = role === 'admin' ? 'admin-dashboard.html' : 'student-dashboard.html'; }, 600);
+  }
+</script>
+</body>
+</html>
